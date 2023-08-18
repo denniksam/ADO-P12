@@ -1,6 +1,8 @@
 ﻿using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,11 +24,13 @@ namespace ADO_P12
     public partial class MainWindow : Window
     {
         private SqlConnection connection;
+        public ObservableCollection<String> columns { get; set; } = new();
 
         public MainWindow()
         {
             InitializeComponent();
             connection = null!;
+            this.DataContext = this;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -35,11 +39,35 @@ namespace ADO_P12
             {
                 connection = new(App.ConnectionString);
                 connection.Open();
+                LoadGroups();
             }
             catch(Exception ex)
             {
                 MessageBox.Show(ex.Message);
                 Close();
+            }
+        }
+
+        private void LoadGroups()
+        {
+            using SqlCommand command = new();
+            command.Connection = connection;
+            command.CommandText = "SELECT * FROM ProductGroups";
+            try
+            {
+                using SqlDataReader reader = command.ExecuteReader();
+
+                while (reader.Read())  // get result's one row
+                {
+                    columns.Add(
+                        $"Id: {reader.GetGuid(0).ToString()[..4]}..., Name: {reader.GetString(1)}"
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Query error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

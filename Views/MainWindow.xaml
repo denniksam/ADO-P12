@@ -8,7 +8,18 @@
         Loaded="Window_Loaded"
         Closed="Window_Closed"
         Title="MainWindow" Height="450" Width="800">
-    <Grid>
+    <Grid ShowGridLines="True">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="2*"/>
+        </Grid.RowDefinitions>
+        
         <StackPanel 
             Orientation="Vertical"
             HorizontalAlignment="Left"
@@ -31,6 +42,17 @@
                 Margin="10 5">
                 Group data count
             </Button>
+        </StackPanel>
+        
+        <StackPanel Orientation="Vertical"
+                    Grid.Row="1" Grid.Column="0">
+            
+            <Label Content="Group content"/>
+            
+            <ListView ItemsSource="{Binding columns}">
+                
+            </ListView>
+            
         </StackPanel>
     </Grid>
 </Window>

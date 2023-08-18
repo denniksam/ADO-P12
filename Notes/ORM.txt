@@ -1,0 +1,40 @@
+﻿ORM - Object Relation Mapping
+Відображення реляційних (пов'язаних) даних у вигляді об'єктів та зв'язків між ними
+
+Як правило мова іде про відображення таблиць БД у вигляді колекцій об'єктів
+Наприклад,
+TABLE ProductGroups (
+	Id			UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+	Name		NVARCHAR(50)     NOT NULL,
+	Description NTEXT            NOT NULL,
+    Picture     NVARCHAR(50)     NULL
+)
+
+Відображається наступним чином
+а) створюється клас (Entity, DTO data transfer object)
+class ProductGroup {
+	public Guid Id { get; set; }			  | Підбираються найбільш близькі
+	public String Name { get; set; }		  | типи даних мови програмування
+	public String Description { get; set; }	  | 
+	[MaxLen = 50]
+	public String Picture { get; set; }		  | 
+}
+за необхідності метаданих (як-то обмеження рядків NVARCHAR(50) ) додаються
+атрибути
+
+б1) створюється колекція 
+List<ProductGroup> ProductGroups
+
+в1) циклом з Reader заповнюється колекція і продовжується робота з нею
+
+
+
+б2) створюється DAO / DAL (Data Access Object / Layer) - набір інструментів
+для роботи з даними на кшталт
+	List<ProductGroup> getAllGroups() {....}
+	List<Product> getProductsByGroup(ProductGroup group) {....}
+	bool insertProduct(Product p) {...}
+
+
+Д.З. Реалізувати виведення даних з таблиці, створеної у першому Д.З.
+(у підсумковому проєкті)
