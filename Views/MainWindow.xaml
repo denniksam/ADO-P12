@@ -49,8 +49,26 @@
             
             <Label Content="Group content"/>
             
-            <ListView ItemsSource="{Binding columns}">
-                
+            <ListView ItemsSource="{Binding ProductGroups}">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn 
+                            Header="Id" Width="50"
+                            DisplayMemberBinding="{Binding Path=Id}"/>
+                        <GridViewColumn 
+                            Header="Name" 
+                            DisplayMemberBinding="{Binding Path=Name}"/>
+
+                    </GridView>
+                </ListView.View>
+
+                <ListView.Resources>
+                    <Style TargetType="{x:Type ListViewItem}">
+                        <EventSetter 
+                            Event="MouseDoubleClick"
+                            Handler="ListViewItem_MouseDoubleClick"/>
+                    </Style>
+                </ListView.Resources>
             </ListView>
             
         </StackPanel>

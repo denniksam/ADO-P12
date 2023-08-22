@@ -1,0 +1,2 @@
+﻿ALTER TABLE ProductGroups
+ADD DeleteDt DATETIME NULL

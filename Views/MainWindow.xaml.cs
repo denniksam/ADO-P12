@@ -25,6 +25,7 @@ namespace ADO_P12
     {
         private SqlConnection connection;
         public ObservableCollection<String> columns { get; set; } = new();
+        public ObservableCollection<DAL.Entity.ProductGroup> ProductGroups { get; set; } = new();
 
         public MainWindow()
         {
@@ -59,9 +60,16 @@ namespace ADO_P12
 
                 while (reader.Read())  // get result's one row
                 {
-                    columns.Add(
-                        $"Id: {reader.GetGuid(0).ToString()[..4]}..., Name: {reader.GetString(1)}"
-                    );
+                    // columns.Add(
+                    //     $"Id: {reader.GetGuid(0).ToString()[..4]}..., Name: {reader.GetString(1)}"
+                    // );
+                    ProductGroups.Add(new()
+                    {
+                        Id = reader.GetGuid(0),
+                        Name = reader.GetString(1),
+                        Description = reader.GetString(2),
+                        Picture = reader.GetString(3),
+                    });
                 }
             }
             catch (Exception ex)
@@ -140,6 +148,21 @@ namespace ADO_P12
                 MessageBox.Show(ex.Message, "Query error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        private void ListViewItem_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            // Double Click по рядку переліку - ? з яким об'єктом він пов'язаний ?
+            if(sender is ListViewItem item)   // Pattern matching
+            {
+                // var group = item.Content as DAL.Entity.ProductGroup;
+                // if(group is not null) { }
+                if(item.Content is DAL.Entity.ProductGroup group)
+                {
+                    MessageBox.Show(group.Description);
+                    
+                }
+            } 
         }
     }
 }
