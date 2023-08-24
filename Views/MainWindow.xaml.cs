@@ -1,4 +1,5 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using ADO_P12.Views;
+using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -53,7 +54,7 @@ namespace ADO_P12
         {
             using SqlCommand command = new();
             command.Connection = connection;
-            command.CommandText = "SELECT * FROM ProductGroups";
+            command.CommandText = "SELECT pg.* FROM ProductGroups pg WHERE pg.DeleteDt IS NULL";
             try
             {
                 using SqlDataReader reader = command.ExecuteReader();
@@ -159,10 +160,94 @@ namespace ADO_P12
                 // if(group is not null) { }
                 if(item.Content is DAL.Entity.ProductGroup group)
                 {
-                    MessageBox.Show(group.Description);
-                    
+                    CrudGroupsWindow dialog = new(group);
+                    bool? dialogResult = dialog.ShowDialog();
+                    if(dialogResult == false)  // Close
+                    {
+                        if(dialog.ProductGroup == null )  // Delete
+                        {
+                            if (deleteProductGroup(group))
+                            {
+                                ProductGroups.Remove(group);
+                                MessageBox.Show("Дані видалено");
+                            }
+                            else
+                            {
+                                MessageBox.Show("Проблеми з БД. Повторіть дію пізніше");
+                            }
+                        }
+                        else
+                        {
+                            MessageBox.Show("Дію скасовано");
+                        }                        
+                    }
+                    else if(dialogResult == true)  // Save
+                    {
+                        if (saveProductGroup(group))
+                        {
+                            MessageBox.Show("Дані збережено");
+                        }
+                        else
+                        {
+                            MessageBox.Show("Проблеми з БД. Повторіть дію пізніше");
+                        }                        
+                    }
                 }
-            } 
+            }
+        }
+        /* Д.З. Реалізувати перевірку введених даних щодо оновлення 
+         * на валідність (пустоту, відповідність форматам)
+         * ** відстежувати зміни - якщо реальних змін не було, то
+         *    деактивувати кнопку "збереження"
+         */
+        private bool deleteProductGroup(DAL.Entity.ProductGroup group)
+        {
+            using SqlCommand cmd = new();
+            cmd.Connection = connection;
+            // !! видалення - встановлення "мітки" - дати видалення
+            // реально це оновлення (UPDATE)
+            cmd.CommandText = $@"
+                UPDATE
+                    ProductGroups 
+                SET 
+                    DeleteDt = CURRENT_TIMESTAMP
+                WHERE 
+                    Id = '{group.Id}' ";
+            try
+            {
+                cmd.ExecuteNonQuery();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Title = ex.Message;
+                return false;
+            }
+        }
+
+        private bool saveProductGroup(DAL.Entity.ProductGroup group)
+        {
+            using SqlCommand cmd = new();
+            cmd.Connection = connection;
+            cmd.CommandText = $@"
+                UPDATE
+                    ProductGroups 
+                SET 
+                    Name = N'{group.Name}', 
+                    Description = N'{group.Description}', 
+                    Picture = N'{group.Picture}' 
+                WHERE 
+                    Id = '{group.Id}' ";
+            try
+            {
+                cmd.ExecuteNonQuery();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Title = ex.Message;
+                return false;
+            }
         }
     }
 }
