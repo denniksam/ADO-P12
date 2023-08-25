@@ -47,7 +47,14 @@
         <StackPanel Orientation="Vertical"
                     Grid.Row="1" Grid.Column="0">
             
-            <Label Content="Group content"/>
+            <DockPanel LastChildFill="False">
+                <Label Content="Group content"
+                       DockPanel.Dock="Left"/>
+                <Button Content="Add" x:Name="AddGroupButton"
+                        Click="AddGroupButton_Click"
+                        DockPanel.Dock="Right"
+                        Margin="0 0 10 0"/>
+            </DockPanel>
             
             <ListView ItemsSource="{Binding ProductGroups}">
                 <ListView.View>

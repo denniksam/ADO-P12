@@ -1,4 +1,5 @@
-﻿using ADO_P12.Views;
+﻿using ADO_P12.DAL.DAO;
+using ADO_P12.Views;
 using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
@@ -25,6 +26,7 @@ namespace ADO_P12
     public partial class MainWindow : Window
     {
         private SqlConnection connection;
+        private DAL.DAO.ProductGroupDao productGroupDao;
         public ObservableCollection<String> columns { get; set; } = new();
         public ObservableCollection<DAL.Entity.ProductGroup> ProductGroups { get; set; } = new();
 
@@ -41,6 +43,7 @@ namespace ADO_P12
             {
                 connection = new(App.ConnectionString);
                 connection.Open();
+                productGroupDao = new(connection);
                 LoadGroups();
             }
             catch(Exception ex)
@@ -52,32 +55,18 @@ namespace ADO_P12
 
         private void LoadGroups()
         {
-            using SqlCommand command = new();
-            command.Connection = connection;
-            command.CommandText = "SELECT pg.* FROM ProductGroups pg WHERE pg.DeleteDt IS NULL";
-            try
-            {
-                using SqlDataReader reader = command.ExecuteReader();
-
-                while (reader.Read())  // get result's one row
+           try
+           {
+                foreach (var group in productGroupDao.GetAll())
                 {
-                    // columns.Add(
-                    //     $"Id: {reader.GetGuid(0).ToString()[..4]}..., Name: {reader.GetString(1)}"
-                    // );
-                    ProductGroups.Add(new()
-                    {
-                        Id = reader.GetGuid(0),
-                        Name = reader.GetString(1),
-                        Description = reader.GetString(2),
-                        Picture = reader.GetString(3),
-                    });
+                    ProductGroups.Add(group);
                 }
-            }
-            catch (Exception ex)
-            {
+           }
+           catch (Exception ex)
+           {
                 MessageBox.Show(ex.Message, "Query error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+           }
         }
 
         private void Window_Closed(object sender, EventArgs e)
@@ -160,21 +149,25 @@ namespace ADO_P12
                 // if(group is not null) { }
                 if(item.Content is DAL.Entity.ProductGroup group)
                 {
-                    CrudGroupsWindow dialog = new(group);
+                    CrudGroupsWindow dialog = new(group with { });
                     bool? dialogResult = dialog.ShowDialog();
                     if(dialogResult == false)  // Close
                     {
                         if(dialog.ProductGroup == null )  // Delete
                         {
-                            if (deleteProductGroup(group))
+                            if (MessageBox.Show("Підтверджуєте видалення?", "Дані будуть видалені",
+                                MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
                             {
-                                ProductGroups.Remove(group);
-                                MessageBox.Show("Дані видалено");
-                            }
-                            else
-                            {
-                                MessageBox.Show("Проблеми з БД. Повторіть дію пізніше");
-                            }
+                                if (deleteProductGroup(group))
+                                {
+                                    ProductGroups.Remove(group);
+                                    MessageBox.Show("Дані видалено");
+                                }
+                                else
+                                {
+                                    MessageBox.Show("Проблеми з БД. Повторіть дію пізніше");
+                                }
+                            }                            
                         }
                         else
                         {
@@ -183,8 +176,12 @@ namespace ADO_P12
                     }
                     else if(dialogResult == true)  // Save
                     {
-                        if (saveProductGroup(group))
+                        if (saveProductGroup(dialog.ProductGroup!))
                         {
+                            int index = ProductGroups.IndexOf(group);
+                            ProductGroups.Remove(group);
+                            ProductGroups.Insert(index, dialog.ProductGroup!);
+
                             MessageBox.Show("Дані збережено");
                         }
                         else
@@ -247,6 +244,32 @@ namespace ADO_P12
             {
                 Title = ex.Message;
                 return false;
+            }
+        }
+
+        private void AddGroupButton_Click(object sender, RoutedEventArgs e)
+        {
+            // C - CREATE
+            DAL.Entity.ProductGroup newGroup = new()
+            {
+                Id = Guid.NewGuid(),
+
+            };
+            CrudGroupsWindow dialog = new(newGroup);
+            bool? dialogResult = dialog.ShowDialog();
+            if (dialogResult ?? false)  // null-coalescence
+            {
+                try
+                {
+                    productGroupDao.Add(newGroup);
+                    ProductGroups.Add(newGroup);
+                    MessageBox.Show("Дані збережено");
+                }
+                catch (Exception ex)
+                {
+                    Title = ex.Message;
+                    MessageBox.Show("Проблеми з БД. Повторіть дію пізніше");
+                }
             }
         }
     }
